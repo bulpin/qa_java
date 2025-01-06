@@ -1,63 +1,64 @@
-import com.example.Feline;
 import com.example.Lion;
 import com.example.Predator;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mockito;
-import static org.junit.Assert.*;
+
 import java.util.List;
 
-@RunWith(Parameterized.class)
-public class LionParameterizedTest {
+import static org.junit.Assert.*;
 
-    private final String sex;
-    private final boolean expectedHasMane;
-    private final boolean isValid;
+public class LionTest {
 
-    public LionParameterizedTest(String sex, boolean expectedHasMane, boolean isValid) {
-        this.sex = sex;
-        this.expectedHasMane = expectedHasMane;
-        this.isValid = isValid;
-    }
+    @Test
+    public void testGetKittens() throws Exception {
+        // Мокируем Predator
+        Predator predatorMock = Mockito.mock(Predator.class);
+        Mockito.when(predatorMock.getKittens()).thenReturn(3);
 
-    @Parameterized.Parameters
-    public static Object[][] data() {
-        return new Object[][] {
-                {"Самец", true, true},
-                {"Самка", false, true},
-                {"Неправильный", false, false}
-        };
+        // Создаем экземпляр Lion с зависимостью Predator
+        Lion lion = new Lion("Самец", predatorMock);
+
+        // Проверяем метод getKittens
+        assertEquals(3, lion.getKittens());
     }
 
     @Test
-    public void testLionBehavior() {
-        try {
-            // Мокируем зависимость Predator
-            Predator predatorMock = Mockito.mock(Predator.class);
-            Mockito.when(predatorMock.eatMeat()).thenReturn(List.of("Мясо"));
+    public void testLionConstructorWithValidSex() throws Exception {
+        // Мокируем Predator
+        Predator predatorMock = Mockito.mock(Predator.class);
 
-            // Создаем экземпляр Lion
-            Lion lion = new Lion(sex, predatorMock);
+        // Проверяем конструктор для Самца
+        Lion maleLion = new Lion("Самец", predatorMock);
+        assertTrue(maleLion.doesHaveMane());
 
-            // Проверяем наличие гривы
-            assertEquals(expectedHasMane, lion.doesHaveMane());
+        // Проверяем конструктор для Самки
+        Lion femaleLion = new Lion("Самка", predatorMock);
+        assertFalse(femaleLion.doesHaveMane());
+    }
 
-            // Проверяем метод getFood
-            assertEquals(List.of("Мясо"), lion.getFood());
+    @Test(expected = Exception.class)
+    public void testLionConstructorWithInvalidSex() throws Exception {
+        // Мокируем Predator
+        Predator predatorMock = Mockito.mock(Predator.class);
 
-            // Проверяем метод getKittens только если Predator — Feline
-            if (predatorMock instanceof Feline) {
-                Feline felineMock = (Feline) predatorMock;
-                Mockito.when(felineMock.getKittens()).thenReturn(3);
-                assertEquals(3, lion.getKittens());
-            }
-        } catch (Exception e) {
-            if (isValid) {
-                fail("Тест упал из-за исключения при валидных данных: " + e.getMessage());
-            } else {
-                assertEquals("Используйте допустимые значения пола животного - Самец или Самка", e.getMessage());
-            }
-        }
+        // Проверяем выброс исключения при неправильном поле
+        new Lion("Неправильный", predatorMock);
+    }
+    @Test
+    public void testGetFood() throws Exception {
+        // Мокируем Predator
+        Predator predatorMock = Mockito.mock(Predator.class);
+        Mockito.when(predatorMock.eatMeat()).thenReturn(List.of("Мясо"));
+
+        // Создаем экземпляр Lion с зависимостью Predator
+        Lion lion = new Lion("Самец", predatorMock);
+
+        // Проверяем метод getFood
+        assertEquals(List.of("Мясо"), lion.getFood());
+
+        // Проверяем, что метод eatMeat был вызван у мока
+        Mockito.verify(predatorMock).eatMeat();
     }
 }
